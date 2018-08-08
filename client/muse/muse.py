@@ -96,12 +96,12 @@ class Muse(object):
     def _handle_eeg(self, handle, data):
         self.s.sendto("%s%s"%(handle,data), (self.HOST,self.PORT))
         self.callback()
-
-
     def _handle_acc(self, handle, data):
 #        print("acc ", handle)
         self.s.sendto("%s%s"%(handle,data), (self.HOST,self.PORT))
+       # self.callback()
 
     def _handle_gyro(self, handle, data):
 #        print("gyro ", handle)
         self.s.sendto("%s%s"%(handle,data), (self.HOST,self.PORT))
+
