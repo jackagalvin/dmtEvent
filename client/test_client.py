@@ -2,6 +2,7 @@ from muse import Muse
 from liblo import *
 import time
 import requests
+import threading
 
 
 address = "00:55:DA:B3:94:D9"
@@ -20,14 +21,15 @@ class Ui_Listener(ServerThread):
     @make_method('/change_mac', 's')
     def new_muse_mac(self, path, args):
         global current_muse
-        print("message recieved")
-        current_muse.disconnect()
-        if(args!='disconnected'):
-            current_muse = connect_muse(args,device_type,host,port,callback,backend)
-            print("connected to %s" % (args))
+        print("message received")
+        if current_muse != None:
+            current_muse.disconnect()
+            current_muse = None
+        if(args[0]!='disconnected'):
+            current_muse = connect_muse(args[0],device_type,host,port,backend)
+            print("connected to %s" % (args[0]))
         else:
             print("disconnecting muse")
-
 
 countACC=0
 def process():
@@ -42,10 +44,11 @@ def start_ui_server():
     server.start()
     print('ui_listener started')
     requests.post("http://192.168.0.146:8000/api/connect-pi", data={'mac':'B8:27:EB:74:F9:40','status':address})
+    run()
 
 
-def connect_muse(address,device_type,host,port,callback):
-    muse = Muse(address=address,device_type=device_type,host=host,port=port,callback=process,backend=backend,interface=None)
+def connect_muse(address,device_type,host,port):
+    muse = Muse(address=address,device_type=device_type,host=host,port=port,backend=backend,interface=None)
     muse.connect()
     print("muse connected %s" %(address))
     muse.start()
@@ -55,9 +58,8 @@ def connect_muse(address,device_type,host,port,callback):
 def initialise(address,device_type,host,port,backend):
     global current_muse
     current_muse = connect_muse(address,device_type,host,port,backend)
-    start_ui_server()
 
-def main():
+def startMuse():
     initialise(address,device_type,host,port,backend)
     run()
 '''
@@ -93,5 +95,19 @@ def run():
     while 1:
         time.sleep(1)
 
-main()
+def new_muse_worker():
+    time.sleep(2)
+    start_ui_server()
+    return
 
+def start_muse_worker():
+    startMuse()
+    return
+
+threads = []
+t = threading.Thread(target=start_muse_worker)
+threads.append(t)
+t.start()
+t = threading.Thread(target=new_muse_worker)
+threads.append(t)
+t.start()
