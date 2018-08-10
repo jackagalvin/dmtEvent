@@ -4,6 +4,11 @@ import eventlet.wsgi
                       
 sio = socketio.Server()
 
+@sio.on('connect')
+def message(self,message):
+    sio.emit('connected-muse',
+         {'data': 'connected','mac':'00:55:DA:B3:94:D9'})
+
 @sio.on('shaking')
 def message(self,message):
     sio.emit('shake',
